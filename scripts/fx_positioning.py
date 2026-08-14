@@ -20,7 +20,7 @@ API response is cached locally for 24 hours so repeated runs don't hit the API.
 Outputs (written to --outdir, default = current working directory):
     Positioning_Data.xlsx    formatted table + all three charts embedded
     ytd_positioning.png      standalone YTD distribution box plot
-    history_positioning.png  full-history small-multiples, y-axis = rolling 3Y percentile
+    history_positioning.png  full-history small-multiples, y-axis = Total Net % OI (zero line)
     holdings_flows_positioning.png holdings (52W Z level) vs flows (1M change in 52W Z) scatter, one dot per ccy
     positioning_table.csv    machine-readable table incl. Lev / AstMgr split
 
@@ -71,8 +71,8 @@ FETCH_LIMIT = 50000   # max rows per request; full FX dataset is ~11k rows
 
 CCY_ORDER = ["EUR", "JPY", "GBP", "CHF", "CAD", "AUD", "NZD", "MXN", "BRL", "ZAR", "DXY"]
 
-# Per-currency chart display start date (rolling 3Y percentile still computed over the
-# full underlying series; only the displayed date window is clipped)
+# Per-currency chart display start date (only the displayed date window is clipped;
+# all table metrics are still computed over the full underlying series)
 CHART_STARTS = {
     "ZAR": date(2016, 1, 1),   # pre-2016 ZAR data is very sparse (<5 obs/year)
 }
@@ -289,8 +289,8 @@ def compute_row(ccy: str, ccy_data: dict) -> dict | None:
         # "historic extreme" statement. These can diverge sharply from the 52W
         # reads: a position can sit at the top of its trailing year (52W Pctl ~98)
         # yet be mid- or low-range on full history (Hist Pctl ~20) — e.g. a
-        # heavily-covered but still-net-short book. (The history chart's y-axis is
-        # the rolling 3Y percentile, a separate point-in-time measure.)
+        # heavily-covered but still-net-short book. (The history chart plots the
+        # raw Total Net % OI level, not any of these ranked measures.)
         "Hist Z":     round(z_score(cur, hist_full), 2),
         "Hist Pctl":  round(pctl_rank(cur, hist_full), 1),
         # WoW Δ and MoM Δ split by trader group (Total = Lev + AstMgr), so each
@@ -522,7 +522,7 @@ def _make_ytd_chart(fx_rows: list[dict], fx_data: dict):
     return buf
 
 
-# ── Full-history time-series chart on a rolling-3Y percentile y-axis ──────────
+# ── Full-history time-series chart of Total Net % OI ──────────────────────────
 
 def _make_history_chart(fx_data: dict):
     try:
@@ -541,7 +541,7 @@ def _make_history_chart(fx_data: dict):
                              figsize=(ncols * 5.5, nrows * 3.0 + 0.8),
                              squeeze=False)
     fig.suptitle(
-        "FX Positioning — Full History  (rolling 3Y percentile of Total Net % OI: "
+        "FX Positioning — Full History  (Total Net % of Open Interest: "
         "Leveraged Funds + Asset Managers)",
         fontsize=11, fontweight="bold", color="#1F3864", y=0.99,
     )
@@ -560,55 +560,43 @@ def _make_history_chart(fx_data: dict):
         dates  = [h["date"] for h in history]
         values = [h["total_net_pct"] for h in history]
 
-        # Y-axis = ROLLING 3-year percentile (0–100): each observation is ranked
-        # only against the trailing 156 reports (≈3Y) up to and including itself,
-        # so the line reads as how stretched positioning was AT THAT TIME vs its
-        # own recent-3Y range — not vs the full sample (which would use future
-        # data and flatten point-in-time extremes). 50 = the 3Y median; 90/10
-        # mark the long/short ends of the trailing-3Y range. Early points (before
-        # 156 reports exist) rank against all history available so far.
-        ROLL_3Y = 156
-        pcts = [pctl_rank(values[i], values[max(0, i - ROLL_3Y + 1): i + 1])
-                for i in range(len(values))]
+        # Y-axis = the raw level: Total Net (Leveraged Funds + Asset Managers)
+        # as % of open interest. Zero is the only reference line — above the line
+        # the market is net long the currency vs USD, below it net short — so the
+        # chart reads directly in the same units as the `Total Net` table column
+        # (no ranking, no window). Magnitude is comparable across time for a given
+        # currency; cross-currency comparison of *stretch* still belongs to the
+        # percentile / z columns in the table.
 
         # Clip display window for sparse-early-data currencies
         chart_start  = CHART_STARTS.get(ccy, dates[0])
-        disp_dates   = [d for d, p in zip(dates, pcts) if d >= chart_start]
-        disp_pcts    = [p for d, p in zip(dates, pcts) if d >= chart_start]
+        disp_dates   = [d for d, v in zip(dates, values) if d >= chart_start]
+        disp_vals    = [v for d, v in zip(dates, values) if d >= chart_start]
         if len(disp_dates) < 2:
-            disp_dates, disp_pcts = dates, pcts
+            disp_dates, disp_vals = dates, values
 
-        ax.plot(disp_dates, disp_pcts, color="#2F5496", linewidth=1.0, zorder=3)
-        # Shade vs the median (50th pctl): above = longer than its own history,
-        # below = shorter.
-        ax.fill_between(disp_dates, disp_pcts, 50,
-                        where=[p >= 50 for p in disp_pcts],
+        ax.plot(disp_dates, disp_vals, color="#2F5496", linewidth=1.0, zorder=3)
+        # Shade vs zero: above = net long the currency, below = net short.
+        ax.fill_between(disp_dates, disp_vals, 0,
+                        where=[v >= 0 for v in disp_vals],
                         alpha=0.18, color="#276221", interpolate=True, zorder=2)
-        ax.fill_between(disp_dates, disp_pcts, 50,
-                        where=[p < 50 for p in disp_pcts],
+        ax.fill_between(disp_dates, disp_vals, 0,
+                        where=[v < 0 for v in disp_vals],
                         alpha=0.18, color="#9C0006", interpolate=True, zorder=2)
 
-        # Range-extreme bands at the 90th / 10th percentile (long / short ends).
-        ax.axhline(90, color="#276221", linewidth=0.9, linestyle="--", alpha=0.75)
-        ax.axhline(10, color="#9C0006",  linewidth=0.9, linestyle="--", alpha=0.75)
-        ax.axhline(50, color="#888888",  linewidth=0.7, linestyle=":",  alpha=0.6)
-
-        # Annotate band lines on the right edge
-        xmax = disp_dates[-1]
-        ax.annotate("90th", xy=(xmax, 90), fontsize=5.5, color="#276221",
-                    va="center", ha="left", xytext=(3, 0), textcoords="offset points")
-        ax.annotate("10th", xy=(xmax, 10), fontsize=5.5, color="#9C0006",
-                    va="center", ha="left", xytext=(3, 0), textcoords="offset points")
+        # Zero line — net long above, net short below.
+        ax.axhline(0, color="#555555", linewidth=0.9, alpha=0.85)
 
         ax.set_xlim(disp_dates[0], date.today())
-        ax.set_ylim(0, 100)
+        lo, hi = min(disp_vals), max(disp_vals)
+        pad    = max((hi - lo) * 0.08, 1.0)
+        ax.set_ylim(lo - pad, hi + pad)
         ax.set_title(ccy, fontsize=9, fontweight="bold", color="#1F3864")
         ax.tick_params(axis="both", labelsize=6.5, colors="#444444")
         ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
         ax.xaxis.set_major_locator(mdates.YearLocator(2))
         ax.tick_params(axis="x", rotation=45)
-        ax.set_yticks([0, 25, 50, 75, 100])
-        ax.set_ylabel("3Y Pctl", fontsize=6, color="#444444")
+        ax.set_ylabel("Net % OI", fontsize=6, color="#444444")
         ax.grid(axis="y", linestyle="--", color="#CCCCCC", alpha=0.45)
         for sp in ("top", "right"):
             ax.spines[sp].set_visible(False)
@@ -617,8 +605,8 @@ def _make_history_chart(fx_data: dict):
         axes[idx // ncols][idx % ncols].axis("off")
 
     fig.text(0.99, 0.005,
-             "Source: CFTC TFF Combined — rolling 3Y (156-report) percentile of (Leveraged Funds + "
-             "Asset Managers) Net % of Open Interest. 50th = 3Y median; 90th/10th = range ends.",
+             "Source: CFTC TFF Combined — (Leveraged Funds + Asset Managers) Net as % of Open "
+             "Interest. Zero line = flat; above = net long the currency vs USD, below = net short.",
              fontsize=6, color="#999999", ha="right")
     fig.tight_layout(rect=[0, 0.015, 1, 0.97])
 
@@ -845,9 +833,9 @@ def write_table_csv(fx_rows: list[dict], cot_date, outdir: Path) -> None:
                     f"Open Interest. 13W/52W/3Y Pctl & Z are vs trailing 13-week, 52-week "
                     f"and 3-year (156-report) windows — horizons from tactical to "
                     f"structural. Hist Z / Hist Pctl are vs FULL history (2006→). The "
-                    f"history chart y-axis is the rolling 3Y percentile (90th/10th = range "
-                    f"ends), showing how stretched positioning was at each point vs its "
-                    f"trailing 3 years. Hist Z / Hist Pctl are the basis for any 'historic "
+                    f"history chart y-axis is the raw Total Net % OI level (zero line = "
+                    f"flat; above = net long the currency vs USD, below = net short) — a "
+                    f"level, not a ranking. Hist Z / Hist Pctl are the basis for any 'historic "
                     f"extreme' read. Windows can diverge sharply; cite the one you mean."])
         w.writerow(cols)
         for r in fx_rows:

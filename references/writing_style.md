@@ -64,8 +64,7 @@ in the prompt, you may use it — but never invent it.)
   (how crowded/extended). Z-score = how many SD from the mean. A high
   percentile with a modest z is range-bound-high; a high z is a genuine outlier.
 - **Three horizons — name the one you mean.** 13W = tactical/recent, 52W =
-  cyclical (1Y), 3Y = structural/multi-year (the rolling-3Y percentile is also
-  the history chart's y-axis); plus Hist (full history, full sample), used for
+  cyclical (1Y), 3Y = structural/multi-year; plus Hist (full history, full sample), used for
   all-time extreme reads. The windows nest, and when they disagree *that is the signal*:
   a position can be at its 13W floor yet near its 3Y high (being cut but still
   structurally large), or fresh on the year but neutral over 3Y. Spell the
@@ -95,20 +94,22 @@ in the prompt, you may use it — but never invent it.)
   - Mirror case (stretched despite the sign): *"CHF is net short (−34% OI) yet
     sits at the top of its range (98th %ile) — a heavily-covered short,
     stretched toward the long end despite the negative net."*
-- **History chart = rolling 3Y percentile (endpoint = `3Y Pctl`; use `Hist Pctl` /
-  `Hist Z` for all-time reads).** The history chart's y-axis is the **rolling 3Y
-  (trailing-156-report) percentile** of Total Net % OI — each point ranked only
-  against its prior ~3 years, so it reads as how stretched positioning was *at that
-  time* — with the 50th-percentile median dotted and the 90th/10th range-ends
-  dashed. The chart endpoint equals the **`3Y Pctl`** column, *not* `Hist Pctl`.
-  For the all-time "where in its full range" read, use the `Hist Pctl` column, and
-  for "genuine outlier vs merely elevated" lean on `Hist Z` (|Hist Z| ≳ 2 is a true
-  extreme; the 90th/10th bands flag range ends, a softer bar). The windows can
+- **History chart = the raw level (endpoint = `Total Net`; stretch reads come from
+  the table).** The history chart's y-axis is **Total Net % OI** — the actual size
+  and direction of the position through time, with a single zero line: green fill
+  above = net long the currency vs USD, red below = net short. Its endpoint equals
+  the **`Total Net`** column. Use it for *shape and size* — the trajectory, regime
+  shifts, and how today's position compares in magnitude with past swings ("the
+  largest EUR long since 2020"). Each panel is auto-scaled to its own currency, so
+  never compare heights across panels. Because it is a level, it carries **no**
+  information about stretch: for that, cite the table — 13W/52W/3Y Pctl & Z for
+  windowed crowding, `Hist Pctl` for all-time range position, `Hist Z` for genuine
+  outlier vs merely elevated (|Hist Z| ≳ 2 is a true extreme). The windows can
   diverge hard: a book can sit at the top of its trailing year (52W 98th %ile) yet
   below its long-run mean (Hist Z −0.9) and mid-low on its 3Y percentile — the
   recent picture is "shorts covered to a 1-yr high," the structural picture is
-  "still net short, mid-low range." Say which window you mean. Never attribute a
-  52W extreme to the history chart — that chart is the rolling-3Y percentile.
+  "still net short, mid-low range." Say which window you mean, and never source a
+  percentile claim to the history chart — that chart shows levels only.
 
 ### Punch and no repetition
 

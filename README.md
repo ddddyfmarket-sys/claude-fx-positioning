@@ -37,7 +37,7 @@ crowding highlights (green = crowded long, red = crowded short):
 
 The charts the analysis reads (also embedded in the workbook):
 
-| YTD positioning-score distribution | Rolling 3Y percentile of net positioning |
+| YTD positioning-score distribution | Full history of net positioning (% OI) |
 |---|---|
 | ![YTD](examples/ytd_positioning.png) | ![History](examples/history_positioning.png) |
 
@@ -124,7 +124,7 @@ python3 "$SKILL_DIR/scripts/fx_positioning.py" --refresh  # bypass 24h cache
 |---|---|
 | `positioning_table.csv` | The table incl. the Leveraged-Funds vs Asset-Manager split — the source of truth for every number in the note. |
 | `ytd_positioning.png` | YTD distribution of each currency's 52W positioning score, with current (×) and 1-week-ago (•) marked. |
-| `history_positioning.png` | Full-history small multiples per currency: y-axis = **rolling 3Y (trailing 156-report) percentile** of Total Net % OI (0–100), with 90th/10th range-end bands and the 50th-percentile median — how stretched each point was vs its prior 3 years. |
+| `history_positioning.png` | Full-history small multiples per currency: y-axis = **Total Net % OI** (the raw level), with a single zero line — green above = net long the currency vs USD, red below = net short. Shows the size and direction of the position through time. |
 | `holdings_flows_positioning.png` | Supplementary holdings-vs-flows scatter: y = holdings (current 52W z-score), x = flows (1-month change in that z-score), one dot per currency; quadrants = long/short × adding/paring. |
 | `Positioning_Data.xlsx` | Formatted table + all three charts embedded. |
 | `fx_positioning_note_<date>.md` / `.pdf` | The written note and its styled one-page PDF (produced by `scripts/md_to_pdf.py`). |
@@ -162,11 +162,11 @@ requirements.txt          Python dependencies
   window (extension).
 - **Lookback windows:** 13W ≈ tactical/recent · 52W ≈ cyclical (1Y) · 3Y ≈
   structural/multi-year (156 reports) · plus full-history `Hist Z` / `Hist Pctl`
-  (full sample, the all-time-extreme read). The history chart's y-axis is the
-  **rolling 3Y percentile**, so its endpoint equals the `3Y Pctl` column — a
-  point-in-time read of how stretched positioning is vs its own recent 3 years.
-  The windows can diverge — a position can be at its 13W floor yet near its 3Y
-  high.
+  (full sample, the all-time-extreme read). The windows can diverge — a position
+  can be at its 13W floor yet near its 3Y high.
+- **History chart** plots the raw **Total Net % OI** level (endpoint = the
+  `Total Net` column), not a ranking — read it for size and direction; take
+  stretch from the percentile / z columns.
 
 ## Disclaimer
 

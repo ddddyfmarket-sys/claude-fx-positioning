@@ -58,7 +58,7 @@ step 6):
 |---|---|
 | `positioning_table.csv` | The table incl. the Leveraged-Funds vs Asset-Manager split. **Source of truth for all numbers you cite.** |
 | `ytd_positioning.png` | YTD distribution box plot: each currency's YTD range of 52W z-scores, with current (×) and 1-week-ago (•) marked. |
-| `history_positioning.png` | Full-history small multiples per currency, y-axis = **rolling 3Y (trailing 156-report) percentile** of Total Net % OI (0–100), with 90th/10th range-end bands and the 50th-percentile median. Reads as how stretched positioning was *at that point* vs its prior 3 years. |
+| `history_positioning.png` | Full-history small multiples per currency, y-axis = **Total Net % OI** (the raw level), with a single zero line. Green fill above zero = net long the currency vs USD, red below = net short. Reads as the actual size and direction of the position through time. |
 | `holdings_flows_positioning.png` | **Supplementary** holdings-vs-flows scatter: y = holdings (current 52W z-score, the level), x = flows (1-month change in that 52W z-score), one dot per currency. Quadrants read as long/short × adding/paring (top-right = long & extending, bottom-right = short & covering). |
 | `Positioning_Data.xlsx` | Formatted table + all three charts embedded — the deliverable workbook for the PM. |
 
@@ -80,17 +80,16 @@ read; the fourth (holdings-vs-flows scatter) is a supplement for broader regime 
    its own year's range, and whether it moved toward or away from an extreme
    in the last week (× vs •).
 3. `history_positioning.png` — for the long-run *shape*: the trajectory, regime
-   shifts, how the current move compares to past swings. The y-axis is now the
-   **rolling 3Y percentile** of Total Net % OI (0–100) — each point ranked only
-   against its trailing 156 reports (≈3Y), so the line reads as how stretched
-   positioning was *at that time* vs its own recent-3Y range (a point-in-time
-   measure, not a full-sample one). 50 = the trailing-3Y median, the 90th/10th
-   bands mark the long/short ends of the trailing-3Y range, and the fill is green
-   above the median, red below. The current endpoint equals the **`3Y Pctl`**
-   column (latest point's trailing-156 window = the 3Y table window) — *not*
-   `Hist Pctl`. For a genuine multi-year *extreme* read, still cross-check
-   `Hist Z` / `Hist Pctl` in the table (full sample; |Hist Z| ≳ 2 is a true
-   outlier); the 90th/10th bands flag trailing-3Y range ends, a softer bar.
+   shifts, how the current move compares to past swings. The y-axis is the raw
+   **Total Net % OI** level — the same units as the `Total Net` column — with a
+   single zero line: green fill above = net long the currency vs USD, red below =
+   net short. The current endpoint equals the **`Total Net`** column. Read it for
+   *direction and size* (how big is this long vs the 2020 long?), and note that
+   each panel is auto-scaled to its own currency, so bar heights are not
+   comparable across panels. Because it is a level, not a ranking, it says
+   nothing on its own about *stretch* — for that go to the table: 13W/52W/3Y
+   Pctl & Z for windowed crowding, `Hist Z` / `Hist Pctl` for a genuine
+   multi-year extreme (|Hist Z| ≳ 2 is a true outlier).
 4. `holdings_flows_positioning.png` *(supplement only)* — the cross-sectional **holdings
    vs flows** snapshot: y = holdings (current 52W z-score, how stretched on the year),
    x = flows (the 1-month change in that same 52W z-score — which way, and how fast,
@@ -137,21 +136,20 @@ as a horizon ladder, and always name which one you mean:
   be only the 7.7th %ile on 13W yet near the top / +2z on 3Y — tactically being
   cut, but still structurally a large long). When the windows disagree, that
   *is* the story — a regime shift or a position rebuilding/unwinding — so spell
-  it out. **The history chart's y-axis is this same rolling-3Y percentile, so
-  its current endpoint equals `3Y Pctl`.**
+  it out.
 - **Hist Z / Hist Pctl** — the position vs its **full history** (2006→), full
   sample. This is the only correct basis for any "historic extreme / multi-year
   high-low" claim. **Use the right window:** 13W/52W/3Y = *windowed* crowding;
   Hist = *all-time* range position. They can diverge sharply — never map one
-  onto the other. Note the history chart now plots the **rolling-3Y** percentile
-  (endpoint = `3Y Pctl`), *not* `Hist Pctl`; use `Hist Z` for whether a level is
-  a true *outlier* (|Hist Z| ≳ 2). (Worked example: CHF can read 98th %ile / +1.8z
-  on 52W — top of the *past year*, shorts covered — yet be far lower on its 3Y
-  percentile and below its long-run mean (negative Hist Z), i.e. still net short
-  and mid-range structurally. On the history chart (rolling 3Y) it would then sit
-  below the 50th-percentile median, in the red band — well short of the 90th
-  long-end line. Claiming it "presses the top of its range" would be wrong; that
-  is a 52W statement, not a 3Y/historic one.)
+  onto the other. The history chart is no help here: it plots the **raw level**
+  (endpoint = `Total Net`), so stretch claims must come from the table — use
+  `Hist Z` for whether a level is a true *outlier* (|Hist Z| ≳ 2). (Worked
+  example: CHF can read 98th %ile / +1.8z on 52W — top of the *past year*,
+  shorts covered — yet be far lower on its 3Y percentile and below its long-run
+  mean (negative Hist Z), i.e. still net short and mid-range structurally. On
+  the history chart it would simply sit below zero, in the red fill — a net
+  short, well off its past highs. Claiming it "presses the top of its range"
+  would be wrong; that is a 52W statement, not a 3Y/historic one.)
 - **WoW Chg / MoM Chg** — change in Total Net % OI vs last week / ~4 weeks ago.
   The *flow*. Describe the biggest movers, the direction, and dispersion between
   real and fast money (if any) of flow.
